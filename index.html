@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Expense Splitter with Transactions</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 50px;
+    }
+    input[type="number"] {
+      width: 100px;
+      padding: 5px;
+      margin: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+    table {
+      margin: 20px auto;
+      width: 50%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+    }
+    th {
+      background-color: #f4f4f4;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Expense Splitter with Transactions</h1>
+  
+  <div>
+    <label>Amount spent by KULDEEP:</label>
+    <input type="number" id="person1" placeholder="0" min="0" required><br>
+
+    <label>Amount spent by ABHIMANYU:</label>
+    <input type="number" id="person2" placeholder="0" min="0" required><br>
+
+    <label>Amount spent by RUPESH:</label>
+    <input type="number" id="person3" placeholder="0" min="0" required><br>
+  </div>
+  
+  <button onclick="calculateExpenses()">Calculate Balances</button>
+
+  <h2>Results</h2>
+  <table id="balancesTable">
+    <thead>
+      <tr>
+        <th>Person</th>
+        <th>Balance</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <h2>Transactions</h2>
+  <ul id="transactionsList"></ul>
+
+  <script>
+    function calculateExpenses() {
+      const person1 = parseFloat(document.getElementById("person1").value) || 0;
+      const person2 = parseFloat(document.getElementById("person2").value) || 0;
+      const person3 = parseFloat(document.getElementById("person3").value) || 0;
+
+      const totalSpent = person1 + person2 + person3;
+      const sharePerPerson = totalSpent / 3;
+
+      const balances = {
+        "KULDEEP": person1 - sharePerPerson,
+        "ABHIMANYU": person2 - sharePerPerson,
+        "RUPESH": person3 - sharePerPerson
+      };
+
+      // Display balances in table
+      const balancesTable = document.getElementById("balancesTable").getElementsByTagName("tbody")[0];
+      balancesTable.innerHTML = "";
+      for (const person in balances) {
+        const row = balancesTable.insertRow();
+        const cellPerson = row.insertCell(0);
+        const cellBalance = row.insertCell(1);
+
+        cellPerson.textContent = person;
+        cellBalance.textContent = balances[person] >= 0 
+          ? `Should receive ₹${balances[person].toFixed(2)}`
+          : `Owes ₹${Math.abs(balances[person]).toFixed(2)}`;
+      }
+
+      // Calculate who owes whom
+      const transactionsList = document.getElementById("transactionsList");
+      transactionsList.innerHTML = "";
+
+      const balanceArray = [
+        { name: "KULDEEP", balance: balances["KULDEEP"] },
+        { name: "ABHIMANYU", balance: balances["ABHIMANYU"] },
+        { name: "RUPESH", balance: balances["RUPESH"] }
+      ];
+
+      // Separate debtors and creditors
+      const debtors = balanceArray.filter(person => person.balance < 0).map(person => ({ ...person }));
+      const creditors = balanceArray.filter(person => person.balance > 0).map(person => ({ ...person }));
+
+      while (debtors.length > 0 && creditors.length > 0) {
+        const debtor = debtors[0];
+        const creditor = creditors[0];
+
+        const amount = Math.min(Math.abs(debtor.balance), creditor.balance);
+        transactionsList.innerHTML += `<li>${debtor.name} has to give ${creditor.name} ₹${amount.toFixed(2)}</li>`;
+
+        debtor.balance += amount;
+        creditor.balance -= amount;
+
+        if (debtor.balance === 0) debtors.shift();
+        if (creditor.balance === 0) creditors.shift();
+      }
+    }
+  </script>
+
+</body>
+</html>
